@@ -29,4 +29,16 @@ double prodscal (double *v, double *w){
     }
     return somma;
 }
+
+void mattrasp (int dim, double A[dim][dim]){
+    for (int i=0; i<dim; i++){
+        for (int j=i+1; j<dim; j++){
+            double temp = A[i][j];
+            A[i][j] = A[j][i];
+            A[j][i] = temp;
+        }
+    }
+}
 #endif
+
+

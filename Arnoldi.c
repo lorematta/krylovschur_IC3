@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <Funzioni.h>
+#include <Funzioni.h>  //mettere #include "Funzioni.h" per cercare prima nella directory locale del progetto
 
 #define N 4  //dim mat A
 #define P 3  //numero passi Arnoldi

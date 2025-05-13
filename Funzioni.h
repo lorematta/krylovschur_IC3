@@ -12,5 +12,6 @@ double prodscal(double *v, double *w);
 void matvec(double A[N][N], double x[N], double y[N]);
 double norma(double *v);
 void mattrasp(int dim, double A[dim][dim]);
+void assegnamat(double **A, double **B, int dimA, int dimB);
 
 #endif

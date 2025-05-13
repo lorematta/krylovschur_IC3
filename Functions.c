@@ -38,5 +38,18 @@ void mattrasp (int dim, double A[dim][dim]){
     }
 }
 
+void assegnamat(double **A, double **B, int dimA, int dimB){
+
+    if(dimA != dimB){
+        printf("errore: dimensioni matrici diverse");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i<dimA; i++){
+        for(int j = 0; j< dimA;j++){
+            A[i][j] = B[i][j];
+        }
+    }
+}
 
 

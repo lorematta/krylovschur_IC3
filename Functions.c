@@ -3,8 +3,6 @@
 #include <math.h>
 
 #define N 4  //dim mat A
-#define P 3  //numero passi Arnoldi
-
 
 
 void matvec (double A[N][N], double x[N], double y[N]){    //funzione per eseguire il prodotto matrice-vettore
@@ -39,6 +37,6 @@ void mattrasp (int dim, double A[dim][dim]){
         }
     }
 }
-#endif
+
 
 

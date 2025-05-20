@@ -1,5 +1,11 @@
-function [B] = Krylov_Schur(v,A,m,k)
-V = Arnoldi(v,A,m);
+function V = Krylov_Schur(v,A,m,k)
+
+res = 1;
+it = 0;
+V = v;
+while (res > 1e-5 && it< 500)
+
+V = Arnoldi(V(:,1),A,m);
 % schur utilizza l'output di uscita di Arnoldi come restart se gli
 % autovalori non sono convergenti 
 
@@ -9,8 +15,9 @@ B = [];
 Hsq = V'*A*V; %Matrice quadrata di Heissemberg
 [y,th] = eig(Hsq); 
 resid = zeros(m,1);
-%verifica convergenza arnoldi
 
+
+%verifica convergenza arnoldi
 for i=1:m
 
     yi = y(:,i);
@@ -22,31 +29,46 @@ end
 
 tol = 1e-2;
 if norm(resid(end)-resid(1)) < tol
-    error("autovalori convergenti");
+    error("autovalori convergenti, usare direttamente arnoldi");
 end
 
 [Q,T] = schur(Hsq);
-lt = ordeig (T);
+lt = eig(T);
+wanted = real(lt)>0;
+p = sum(wanted);
 
-for i = 1 : m
-    if th(i,i) > 0
-        lw = [lw, th(i,i)];
-    end
+if p == 0
+    disp("Nessun autovalore wanted trovato.");
+    return;
+end 
+
+[Q_ord, T_ord] = ordschur(Q,T,wanted);   % Riordina la decomposizione di Schur in wanted e unwanted
+
+
+if p>k
+    Bw = T_ord(1:k,1:k);
+    Qw = Q_ord(:, 1:k);
+else
+    Bw = T_ord(1:p,1:p);
+    Qw = Q_ord(:, 1:p);
 end
 
-lw = sort(lw,"descend");
 
-for i = 1:m
-    if ~ismember(th(i,i), lw)
-        lu = [lu, th(i,i)];
-    end
+ V = V * Qw;       % nuova base ortonormale (n x k)
+ Hsq = V'*A*V; %Matrice quadrata di Heissemberg
+[y,th] = eig(Hsq); 
+resid = zeros(k,1);
+
+
+%verifica convergenza arnoldi
+for i=1:k
+
+    yi = y(:,i);
+    xi = V*yi;
+    li = th(i,i);
+    resid(i) = norm(A*xi-li*xi);
+
 end
-
-if length(lw)>k    %che succede se gli autovalori che soddisfano la richiesta sono <k?
-    lw = lw(1,1:k);
+res =  norm(resid(end)-resid(1));
+it = it+1;
 end
-
-Bw = diag(lw, 0); 
-Bu = diag(lu, 0); 
-
-Hnew = Bw;

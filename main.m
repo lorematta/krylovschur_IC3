@@ -1,20 +1,23 @@
-
+%% 
 clear all
 clc
+itmax = 1000;
 
 A = diag([10, 5, 1, -2, -10]);  % autovalori noti
-v = randn(5,1);
+%v = randn(5,1);
+v = [-0.430648181828719
+     -0.753265558652707
+     -0.468505287570834
+      0.107826844702326
+      0.126527896983051];
 v = v / norm(v);
 m = 4; 
 k = 2;
-[V,it] = Krylov_Schur(v,A,m,k);
-Hsq = V'*A*V; %Matrice quadrata di Heissemberg
-th = eig(Hsq); %problema di Ritz e autovalori approssimati
 
 %%
 clear all
 clc
-itz = 1000;
+itmax = 1000;
 
 A = [0.0733616900804668	0.0364255155254801	0.499648777847273	0.246069567106098	0.617850587139279	0.698199766179566	0.970372902013312	0.898376325005631	0.0685823485554556	0.600838938434792
      0.822326222185306	0.326244573060312	0.615288242215057	0.581491252368133	0.0702135239869584	0.733742133263281	0.123860507146820	0.728444033957786	0.299400386560865	0.112462378383286
@@ -41,13 +44,15 @@ v =  [-0.318776518738141
 v = v / norm(v);
 m = 7; 
 k = 2;
-[V,res] = Krylov_Schur(v,A,m,k,itz);
-it = (1:itz);
+
+%%
+[V,res,it] = Krylov_Schur(v,A,m,k,itmax);
 figure();
 leg = cell(1, k); 
+it = (1:it);
 
 for i = 1:k
-    plot(it, res(1:itz,i));
+    plot(it, res(1:it(end),i));
     hold on
     leg{i} = sprintf('res eig n° %d', i);
 end

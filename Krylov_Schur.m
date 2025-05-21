@@ -11,24 +11,6 @@ V = Arnoldi(V(:,1)/norm(V(:,1)),A,m);
 % autovalori non sono convergenti 
 
 Hsq = V'*A*V; %Matrice quadrata di Heissemberg
-% [y,th] = eig(Hsq); 
-% resid = zeros(m,1);
-
-
-% %verifica convergenza arnoldi
-% for i=1:m
-% 
-%     yi = y(:,i);
-%     xi = V*yi;
-%     li = th(i,i);
-%     resid(i) = norm(A*xi-li*xi);
-% 
-% end
-% 
-% tol = 1e-2;
-% if norm(resid(end)-resid(1)) < tol
-%     error("autovalori convergenti, usare direttamente arnoldi");
-% end
 
 [Q,T] = schur(Hsq);
 lt = eig(T);
@@ -42,22 +24,19 @@ if p == 0
 end 
 
 wanted = false(length(lt),1);
-mod = false(length(lt),1);
+valabs = false(length(lt),1);
 
 for i=1:length(lt)
-    mod(idx(i)) = true;
-end
-
-for i= 1:length(lt)
-    if mod(i) && re(i)
+    valabs(idx(i)) = true;
+    if valabs(i) && re(i)
         wanted(i) = 1;
     end
 end
 
 [Q_ord, T_ord] = ordschur(Q,T,wanted);   % Riordina la decomposizione di Schur in wanted e unwanted
 
-Bw = T_ord(1:p,1:p);    
-Qw = Q_ord(:, 1:p);
+Bw = T_ord(1:min(p,k),1:min(p,k));    
+Qw = Q_ord(:, 1:min(p,k));
 
 
  V = V * Qw; 

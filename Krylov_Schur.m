@@ -40,7 +40,6 @@ Qw = Q_ord(:, 1:min(p,k));
 
 
  V = V * Qw; 
- [V, ~] = qr(V,0); % nuova base ortonormale (n x k)
  Hsq = V'*A*V; %Matrice quadrata di Heissemberg
 [y,th] = eig(Hsq); 
 

@@ -1,9 +1,10 @@
-function [V,it] = Krylov_Schur(v,A,m,k)
+function [V,resid] = Krylov_Schur(v,A,m,k,itz)
 
 res = 1;
-it = 0;
+it = 1;
 V = v;
-while (res > 1e-5 && it< 500)
+resid = zeros(50,k);
+while (res > 1e-5 && it<= itz)
 
 V = Arnoldi(V(:,1)/norm(V(:,1)),A,m);
 % schur utilizza l'output di uscita di Arnoldi come restart se gli
@@ -55,7 +56,7 @@ end
 
 [Q_ord, T_ord] = ordschur(Q,T,wanted);   % Riordina la decomposizione di Schur in wanted e unwanted
 
-Bw = T_ord(1:p,1:p);
+Bw = T_ord(1:p,1:p);    
 Qw = Q_ord(:, 1:p);
 
 
@@ -63,22 +64,21 @@ Qw = Q_ord(:, 1:p);
  [V, ~] = qr(V,0); % nuova base ortonormale (n x k)
  Hsq = V'*A*V; %Matrice quadrata di Heissemberg
 [y,th] = eig(Hsq); 
-resid = zeros(k,1);
+
 
 %verifica convergenza
-for i=1:k
 
+for i=1:k
     yi = y(:,i);
     xi = V*yi;
     li = th(i,i);
-    resid(i) = norm(A*xi-li*xi);
-
-end
-res = max(resid);
-it = it+1
+    resid(it,i) = norm(A*xi-li*xi);
 end
 
-
+res = max(max(resid));
+it = it+1;
+end
+V = Arnoldi(V(:,1)/norm(V(:,1)),A,m);
 Qw = Q_ord(:, 1:k);
 V = V * Qw;
 end

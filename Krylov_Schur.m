@@ -9,7 +9,7 @@ while (res > 1e-5 && it<= itmax)
 it = it+1;
 V = Arnoldi(V(:,1)/norm(V(:,1)),A,m);
 Hsq = V'*A*V; %Matrice quadrata di Heissemberg
-[Q,T] = schur(Hsq);
+[Q,T] = schur(Hsq);   % la decomposizione di schur è simile alla qr ma scrive A = Q'T Q  con T triangolare superiore che conserva lo spettro
 lt = eig(T);
 
 [~,idx] = sort(lt,"descend");
@@ -35,15 +35,6 @@ end
 
 Bw = T_ord(1:min(p,k),1:min(p,k));    
 Qw = Q_ord(:, 1:min(p,k));
-
-% re_pos = find(real(lt) > 0);
-% [~, idx] = sort(lt(re_pos), 'descend');
-% selected = re_pos(idx(1:min(k, end)));  % indici wanted
-% 
-% wanted = false(length(lt),1);
-% wanted(selected) = true;
-
-% [Qw, Tw] = ordschur(Q,T,wanted);   % Riordina la decomposizione di Schur in wanted e unwanted
 
 
 

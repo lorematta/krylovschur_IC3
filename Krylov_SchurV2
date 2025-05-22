@@ -7,8 +7,6 @@ resid = zeros(itmax,k);
 
 while (res > 1e-5 && it<= itmax)
 it = it+1;
-
-%[V, ~, r, b] = Arnoldi(V(:,1)/norm(V(:,1)),A,m);
 Hsq = V'*A*V; %Matrice quadrata di Heissemberg
 [Q,T] = schur(Hsq);
 lt = eig(T);
@@ -41,8 +39,6 @@ Qw = Q_ord(:, 1:min(p,k));
 
 %ricostruzione sottospazio di dimensione k
 Vk = V * Qw; 
-
-% [y,th] = eig(Hsq); 
 
 V = bloccoArnoldi(Vk,A,m,k);
 

@@ -1,4 +1,7 @@
+
 function [V, resid, it] = Krylov_SchurV2(v,A,m,k,itmax)
+
+%Attenzione!!! non funziona bene se k non è molto piu piccolo di m 
 
 res = 1;
 it = 0;
@@ -12,8 +15,8 @@ Hsq = V'*A*V; %Matrice quadrata di Heissemberg
 lt = eig(T);
 
 %selezione autovalori voluti
-[~,idx] = sort(lt,"descend");
-re = real(lt)> -1e-8;
+[~,idx] = sort(real(lt),"descend");
+re = real(lt)> 0;
 p = sum(re);
 
 if p == 0
@@ -32,19 +35,22 @@ for i=1:length(lt)
 end
 
 %riordino autovalori
-[Q_ord, T_ord] = ordschur(Q,T,wanted);   % Riordina la decomposizione di Schur in wanted e unwanted
+[Q_ord, T_ord] = ordschur(Q,T,wanted);   % decomposizione di Schur in wanted e unwanted
 
 Bw = T_ord(1:min(p,k),1:min(p,k));    
 Qw = Q_ord(:, 1:min(p,k));
 
 %ricostruzione sottospazio di dimensione k
 Vk = V * Qw; 
+[Vk, ~] = qr(Vk, 0);
 
+%riespansione a V[nxm]
 V = bloccoArnoldi(Vk,A,m,k);
 
 %verifica convergenza
-Hsq = V'*A*V; %Matrice quadrata di Heissemberg
-[y,th] = eig(Hsq); 
+Hsq = V'*A*V; %Matrice quadrata di Hessemberg
+[y,th] = eig(Hsq);
+
 for i=1:k
     yi = y(:,i);
     xi = V*yi;

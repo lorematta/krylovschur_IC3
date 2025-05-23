@@ -1,4 +1,4 @@
-function [V, resid, it] = Krylov_Schurprova(v,A,m,k,itmax)
+function [V, resid, it] = Krylov_SchurV2(v,A,m,k,itmax)
 
 res = 1;
 it = 0;

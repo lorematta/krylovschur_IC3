@@ -1,3 +1,4 @@
+
 function V = bloccoArnoldi(Vk, A, m, k)
 
 %in questo caso si parte da una base ortogonale per ricostrure le colonne

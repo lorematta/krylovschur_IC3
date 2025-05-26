@@ -1,4 +1,5 @@
 
+
 %%
 clear all
 clc
@@ -109,8 +110,9 @@ v = [0.0146430631494266
 v = v/norm(v);
 
 m = 30;
-k = 10;
-
+k = 7;
+lA = eig(A);
+lA = sort(real(lA), "descend");
 
 %% 
 clear all
@@ -156,6 +158,10 @@ m = 7;
 k = 2;
 
 %%
+clear all
+clc
+itmax = 1000;
+
 A = diag([10 -54 8 -7 6 -5 4 3  1  -2 -3 8 15 -79 -56]);
 
 v =  [-0.318776518738141
@@ -220,6 +226,6 @@ th2 = sort(real(th), "descend");
 %%
 l = eig(A);
 l = sort(real(l), "descend");
-l = l(1:30);
+l = l(1:m);
 r1 = norm(l - th1);
 r2 = norm(l - th2);

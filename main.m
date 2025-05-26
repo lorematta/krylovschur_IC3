@@ -1,5 +1,6 @@
 
 
+
 %%
 clear all
 clc
@@ -125,6 +126,8 @@ v = v/norm(v);
 
 m = 30;
 k = 10;
+lA = eig(A);
+lA = sort(real(lA), "descend");
 
 %%
 clear all
@@ -156,13 +159,15 @@ v =  [-0.318776518738141
 v = v / norm(v);
 m = 7; 
 k = 2;
+lA = eig(A);
+lA = sort(real(lA), "descend");
 
 %%
 clear all
 clc
 itmax = 1000;
 
-A = diag([10 -54 8 -7 6 -5 4 3  1  -2 -3 8 15 -79 -56]);
+A = diag([10 -54 9 -7 6 -5 4 3  1  -2 -3 8 15 -79 -56]);
 
 v =  [-0.318776518738141
       0.0639759007484543
@@ -181,11 +186,13 @@ v =  [-0.318776518738141
      -0.47484544874973598];
 
 v = v / norm(v);
-m = 7; 
-k = 2;
+m = 10; 
+k = 3;
+lA = eig(A);
+lA = sort(real(lA), "descend");
 
 %%
-[V,res,it] = Krylov_SchurV3(v,A,m,k,itmax);
+[V,res,it] = Krylov_Schur(v,A,m,k,itmax);
 figure();
 leg = cell(1, k); 
 it = (1:it);

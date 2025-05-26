@@ -53,7 +53,6 @@ for i=1:k
     li = th(i,i);
     resid(it,i) = norm(A*xi-li*xi);
 end
-
 res = max(resid(it,:));
 
 end

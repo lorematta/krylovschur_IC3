@@ -111,7 +111,7 @@ v = [0.0146430631494266
 v = v/norm(v);
 
 m = 30;
-k = 7;
+k = 6;
 lA = eig(A);
 lA = sort(real(lA), "descend");
 
@@ -120,11 +120,11 @@ clear all
 clc
 itmax = 1000;
 
-A = rand(50,50);
-v = rand(50,1);
+A = rand(10000,10000);
+v = rand(10000,1);
 v = v/norm(v);
 
-m = 30;
+m = 550;
 k = 10;
 lA = eig(A);
 lA = sort(real(lA), "descend");
@@ -195,10 +195,10 @@ lA = sort(real(lA), "descend");
 [V,res,it] = Krylov_Schur(v,A,m,k,itmax);
 figure();
 leg = cell(1, k); 
-it = (1:it);
+it_ = (1:1:it);
 
 for i = 1:k
-    plot(it, res(1:it(end),i));
+    plot(it_, res(1:it_(end),i));
     hold on
     leg{i} = sprintf('res eig n° %d', i);
 end
@@ -207,8 +207,7 @@ legend(leg);
 hold off;
 
 Hsq = V'*A*V; %Matrice quadrata di Heissemberg finale
-th = eig(Hsq); %problema di Ritz e autovalori approssimati
-th1 = sort(real(th), "descend");
+th = sort(real(eig(Hsq)), "descend");%problema di Ritz e autovalori approssimati
 
 
 %%

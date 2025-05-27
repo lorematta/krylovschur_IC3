@@ -1,5 +1,4 @@
-
-function [V, resid, it] = Krylov_SchurV3(v,A,m,k,itmax)
+function [V, resid, it] = Krylov_Schur(v,A,m,k,itmax)
 
 %Attenzione!!! non funziona bene se k non è molto piu piccolo di m 
 
@@ -16,12 +15,20 @@ lt = eig(T);
 
 [~, idx] = sort(real(lt), "descend");
 
-trov = idx(real(lt(idx)) > 0); %parte reale positiva
+trov= idx(real(lt(idx)) > 1e-5); %parte reale positiva
+k_ = real(lt(idx)) > 1e-6;
+count = 0;
 
-if isempty(trov)
-    disp("nessun autovalore wanted trovato.");
-    return;
+for i = 1:length(k_)
+    if k_(i) == 1 
+        count = count + 1;
+    end
 end
+k_ = count;
+% if isempty(trov)
+%     disp("nessun autovalore wanted trovato.");
+%     return;
+% end
 
 % Prendo i primi k autovalori con parte reale positiva
 wanted = false(length(lt),1);
@@ -29,14 +36,15 @@ wanted(trov(1:min(k, length(trov)))) = true;
 
 % riordino decomposizione di schur con eig selezionati
 [Q_ord, ~] = ordschur(Q, T, wanted);   
-Qw = Q_ord(:, 1:min(length(trov),k)); %matrice ortogonale associata a autovalori wanted
+%Qw = Q_ord(:, 1:min(length(trov),k)); %matrice ortogonale associata a autovalori wanted
+Qw = Q_ord(:, 1:min(k_,k));
 
 %ricostruzione sottosp. di dimensione k
 Vk = V * Qw; 
 [Vk, ~] = qr(Vk, 0);
 
 %riespansione a V[nxm]
-V = bloccoArnoldi(Vk,A,m,k);
+V = bloccoArnoldi(Vk,A,m,k,k_);
 
 %verifica convergenza
 Hsq = V'*A*V; %Matrice quadrata di Hessemberg

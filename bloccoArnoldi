@@ -1,18 +1,20 @@
 
-function V = bloccoArnoldi(Vk, A, m, k)
+
+function V = bloccoArnoldi(Vk, A, m, k, k_)
 
 %in questo caso si parte da una base ortogonale per ricostrure le colonne
 %di V da k a m
+K = min(k,k_);
 
-if norm(Vk' * Vk - eye(k)) > 1e-5
+if norm(Vk' * Vk - eye(K)) > 1e-5
     error("Vk non è ortonormale!");
 end
 
 dim = size(A);
 V = zeros(dim(1),m);
-V(:,1:k) = Vk;
+V(:,1:K) = Vk;
 
-for i = k:m-1
+for i = K:m-1
 
     r = A * V(:, i);
     %ortogonalizzazione

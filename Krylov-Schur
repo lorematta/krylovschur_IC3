@@ -1,4 +1,5 @@
-function [V, resid, it] = Krylov_Schur(v,A,m,k,itmax)
+
+function [V, resid, it, K] = Krylov_Schur(v,A,m,k,itmax)
 
 %Attenzione!!! non funziona bene se k non è molto piu piccolo di m 
 
@@ -7,7 +8,7 @@ it = 0;
 V = Arnoldi(v,A,m);
 resid = zeros(itmax,k);
 
-while (res > 1e-5 && it<= itmax)
+while (res > 1e-7 && it<= itmax)
 it = it+1;
 Hsq = V'*A*V; %Matrice quadrata di Hessemberg
 [Q,T] = schur(Hsq);
@@ -16,15 +17,13 @@ lt = eig(T);
 [~, idx] = sort(real(lt), "descend");
 
 trov= idx(real(lt(idx)) > 1e-5); %parte reale positiva
-k_ = real(lt(idx)) > 1e-6;
-count = 0;
-
-for i = 1:length(k_)
-    if k_(i) == 1 
-        count = count + 1;
-    end
+k_ = sum(real(lt(idx)) > 1e-6);
+if k_ == 0
+    disp("nessun autovalore wanted trovato.");
+    K = 0;
+    return;
 end
-k_ = count;
+
 % if isempty(trov)
 %     disp("nessun autovalore wanted trovato.");
 %     return;
@@ -43,8 +42,9 @@ Qw = Q_ord(:, 1:min(k_,k));
 Vk = V * Qw; 
 [Vk, ~] = qr(Vk, 0);
 
+K = min (k, k_);
 %riespansione a V[nxm]
-V = bloccoArnoldi(Vk,A,m,k,k_);
+V = bloccoArnoldi(Vk,A,m,K);
 
 %verifica convergenza
 Hsq = V'*A*V; %Matrice quadrata di Hessemberg
@@ -55,7 +55,7 @@ Hsq = V'*A*V; %Matrice quadrata di Hessemberg
 th = th(idx2, idx2);
 y = y(:, idx2);
 
-for i=1:k
+for i=1:K
     yi = y(:,i);
     xi = V*yi;
     li = th(i,i);

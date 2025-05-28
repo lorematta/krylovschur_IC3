@@ -1,8 +1,3 @@
-
-
-
-
-
 %%
 clear all
 clc
@@ -194,6 +189,47 @@ lA = eig(A);
 lA = sort(real(lA), "descend");
 
 %%
+clear all
+clc
+itmax = 1000;
+A = diag([-100, -80, -60, -40, -20, -10, -1, -0.1, 1, -5]);
+v =  [-0.318776518738141
+      0.0639759007484543
+      0.415465966431780
+      0.412865343101648
+     -0.398050495567505
+      0.501360402094415
+      0.204972149846485
+      0.0704301790141458
+     -0.0698817501137223
+     -0.299257336233650];
+
+v = v / norm(v);
+m = 9; 
+k = 1;
+lA = eig(A);
+lA = sort(real(lA), "descend");
+
+% troppa poca la differenza tra m e k...
+% cosi non trova nulla
+%%
+clear all
+clc
+itmax = 1000;
+eigs = [-100:-2, 0.1];  % 49 valori negativi, 1 positivo piccolo
+
+% Costruisco A come matrice diagonale
+A = diag(eigs);  % mescolo per non favorire posizione
+v = rand(100,1);
+v = v/norm(v);
+m = 40; 
+k = 5;
+lA = eig(A);
+lA = sort(real(lA), "descend");
+
+% metodo instabile pero lo trova
+
+%%
 [V,res,it,K] = Krylov_Schur(v,A,m,k,itmax);
 if K ~= 0
 figure();
@@ -214,3 +250,10 @@ Hsq = V'*A*V; %Matrice quadrata di Heissemberg finale
 th = sort(real(eig(Hsq)), "descend");%problema di Ritz e autovalori approssimati
 end
 
+%%
+%restart 
+[V, res, it] = Krylov_Schur(v,A,m,k,1);
+res = max(res(end,:));
+[V, res, it] = Krylov_Schur_restart(V,A,m,k, res, it);
+res = max(res(end,:));
+[V, res, it] = Krylov_Schur_restart(V,A,m,k, res, it);

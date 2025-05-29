@@ -1,9 +1,7 @@
-function [V, resid, it, K] = Krylov_Schur_restart(V,A,m,k, res, it)
+function [V, resid, it, K] = Krylov_Schur_restart(V,A,m,k, it)
 
 %Attenzione!!! non funziona bene se k non è molto piu piccolo di m 
 
-
-while (res > 1e-7)
 it = it+1;
 Hsq = V'*A*V; %Matrice quadrata di Hessemberg
 [Q,T] = schur(Hsq);
@@ -51,7 +49,6 @@ for i=1:K
     li = th(i,i);
     resid(it,i) = norm(A*xi-li*xi);
 end
-res = max(resid(it,:));
+end
 
-end
-end
+

@@ -164,7 +164,7 @@ clear all
 clc
 itmax = 1000;
 
-A = diag([-10 -54 9 -79*i -6 5 -4+58*i -3  1  -2+i*2 -3 -8 -15 -79 -56]);
+A = diag([-10 -54 -9 -79*i -6 5 -4+58*i -3  0.1  -2+i*2 -3 -8 -15 -79 -56]);
 
 v =  [-0.318776518738141
       0.0639759007484543
@@ -216,14 +216,14 @@ lA = sort(real(lA), "descend");
 clear all
 clc
 itmax = 1000;
-eigs = [-100:-2, 0.1];  % 49 valori negativi, 1 positivo piccolo
+eigs = [-1000:-2, 1];  % 49 valori negativi, 1 positivo piccolo
 
 % Costruisco A come matrice diagonale
 A = diag(eigs);  % mescolo per non favorire posizione
-v = rand(100,1);
+v = rand(1000,1);
 v = v/norm(v);
-m = 40; 
-k = 5;
+m = 20; 
+k = 1;
 lA = eig(A);
 lA = sort(real(lA), "descend");
 
@@ -252,8 +252,11 @@ end
 
 %%
 %restart 
-[V, res, it] = Krylov_Schur(v,A,m,k,1);
+[V, res, it] = Krylov_Schur(v,A,m,k,0);
 res = max(res(end,:));
-[V, res, it] = Krylov_Schur_restart(V,A,m,k, res, it);
+[V, res, it] = Krylov_Schur_restart(V,A,m,k, it);
 res = max(res(end,:));
-[V, res, it] = Krylov_Schur_restart(V,A,m,k, res, it);
+[V, res, it] = Krylov_Schur_restart(V,A,m,k, it);
+res = max(res(end,:));
+Hsq = V'*A*V; %Matrice quadrata di Heissemberg finale
+th = sort(real(eig(Hsq)), "descend");%problema di Ritz e autovalori approssimati

@@ -1,16 +1,16 @@
-
-function [V, resid, it, K] = Krylov_Schur_Av(f,m,k,itmax)
+function [V, resid, it, K] = Krylov_Schur_Av(v,f,m,k,itmax)
 
 %Attenzione!!! non funziona bene se k non è molto piu piccolo di m 
 
 res = inf;
 it = 0;
-[V,H] = Arnoldi(v,f,m);
+[V,Hsq] = Arnoldi_Av(v,f,m);
 resid = zeros(itmax,k);
 
 while (res > 1e-7 && it<= itmax)
 it = it+1;
-Hsq = H(1:m,1:m); %Matrice quadrata di Hessemberg
+%Hsq = H(1:m,1:m); %Matrice quadrata di Hessemberg ma esce gia quadrata da
+%Arnoldi
 [Q,T] = schur(Hsq);
 lt = eig(T);
 
@@ -44,10 +44,10 @@ Vk = V * Qw;
 
 K = min (k, k_);
 %riespansione a V[nxm]
-[V,H] = bloccoArnoldi_Av(Vk,f,m,K);
+[V,Hsq] = bloccoArnoldi_Av(Vk,f,m,K, Hsq);
 
 %verifica convergenza
-Hsq = H(1:m,1:m); %Matrice quadrata di Hessemberg
+%Hsq = H(1:m,1:m); %Matrice quadrata di Hessemberg
 [y,th] = eig(Hsq);
 
 %riordino th di autovalori approssimati secondo wanted

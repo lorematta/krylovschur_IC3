@@ -1,4 +1,5 @@
-function [V,H] = bloccoArnoldi_Av(Vk, f, m, k)
+
+function [V,H] = bloccoArnoldi_Av(Vk, f, m, k, H0)
 
 %in questo caso si parte da una base ortogonale per ricostrure le colonne
 %di V da k a m
@@ -11,29 +12,30 @@ end
 dim = size(Vk(:,1));
 V = zeros(dim(1),m);
 V(:,1:k) = Vk;
+H = H0;
 
 for i = k:m-1
 
     r =  f(V(:, i));
     %ortogonalizzazione
-    h = V(:,1:i)' * r;
-    r = r - V(:,1:i) * h;
+    h = V(:,1:i)'*r;
+    r = r - V(:,1:i)*h;
     b = norm(r);
 
     if b < 1e-12
         warning("Breakdown numerico al passo %d", i);
         fprintf("Il sottospazio di Krylov ha raggiunto dimensione effettiva %d\n", i);
         V = V(:, 1:i);  % tronca la base fino a i colonne valide
+        H = H(1:i,1:i);
         return;
     end
-
-    H = [H, h; zeros(1,i), b];
+    H (1:i,i) = h;
+    H (1+i,i) = b;
     V(:,i+1) = r/b;
-
 end
 
 r = f(V(:, m));
 h = V'*r;
-H = [H,h];
+H(1:m,m) = h;
 
 end

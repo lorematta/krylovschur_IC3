@@ -260,3 +260,27 @@ res = max(res(end,:));
 res = max(res(end,:));
 Hsq = V'*A*V; %Matrice quadrata di Heissemberg finale
 th = sort(real(eig(Hsq)), "descend");%problema di Ritz e autovalori approssimati
+
+
+
+
+
+
+%% In this case we don't have the A matrix explicitily
+clear all
+clc
+itmax = 1000;
+n = 100;
+f = funA(n);
+v = rand(n,1);
+v = v/norm(v);
+m = 40;
+k = 2;
+
+
+
+%%
+[Vm, res, it] = Krylov_Schur_Av(v,f,m,k,0);
+res = max(res(end,:));
+[Vm, res, it, Hsq] = Krylov_Schur_Av_restart(Vm,f,m,k, it);
+th = sort(real(eig(Hsq)), "descend");%problema di Ritz e autovalori approssimati

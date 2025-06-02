@@ -1,0 +1,11 @@
+function Afun = funA(n)
+
+    % Costruzione interna (non visibile all'esterno)
+    [Q, ~] = qr(randn(n));                   % matrice ortonormale
+    D = diag(linspace(1, 10, n));            % spettro controllato
+    A_internal = Q * D * Q';                 % A simmetrica definita positiva
+
+    % Funzionale matrix-free
+    Afun = @(v) A_internal * v;              % restituisce f(v) = Av
+
+end

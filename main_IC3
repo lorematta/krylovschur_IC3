@@ -1,14 +1,14 @@
 clear all
 clc
 
-itmax = 1000;
-n = 1000;
+itmax = 2000;
+n = 100;
 [Q, ~] = qr(randn(n));        
 [f,lf] = funA(Q,n);
 v = rand(n,1);
 v = v/norm(v);
-m = 30;
-k = 3; 
+m = 40;
+k = 2; 
 lf = sort(real(lf), "descend");
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -18,7 +18,7 @@ it = 1;
 
 [V,Hsq] = Arnoldi_Av(v,f,m);
 
-while max(resid(end,:)) > tol
+while max(resid(end,:)) > tol && it<itmax
 
     [Q,T] = schur(Hsq);                           %schur decomposition
     [Q_ord, K] = eig_selection(Q,T,k);            %
@@ -31,7 +31,9 @@ while max(resid(end,:)) > tol
     it = it+1;
 end
 
-
+ite = 1:size(resid,1);
+figure();
+plot(ite, resid(:,1:K));
 
 
 

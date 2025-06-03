@@ -278,14 +278,16 @@ resid = [resid; res];  %ricorda che il residuo in uscita è il residuo associato
                        %meno vicino alla convergenza 
 
 while  max(resid(end,:)) > tol
-    [V, res, it] = Krylov_Schur_restart(V,A,m,k, it);
+    [V, res, it, K] = Krylov_Schur_restart(V,A,m,k, it);
     resid = [resid; res(end,:)];
 end
 
 Hsq = V'*A*V; %Matrice quadrata di Hessemberg finale
 th = sort(real(eig(Hsq)), "descend");%problema di Ritz e autovalori approssimati
 
-
+ite = 1:size(resid,1);
+figure();
+plot(ite, resid(:,1:K));
 
 
 
@@ -293,8 +295,8 @@ th = sort(real(eig(Hsq)), "descend");%problema di Ritz e autovalori approssimati
 %% Av :   In this case we don't have the A matrix explicitily
 clear all
 clc
-itmax = 1000;
-n = 100;
+itmax = 2000;
+n = 1000;
 [Q, ~] = qr(randn(n));         % matrice ortonormale
 [f,lf] = funA(Q,n);
 v = rand(n,1);
@@ -305,18 +307,19 @@ lf = sort(real(lf), "descend");
 
 
 %%
-
 resid = inf*ones(1,k);
 tol = 1e-6;
 [V, res, it] = Krylov_Schur_Av(v,f,m,k,0);
 resid = [resid; res(end,:)];
 
-while max(resid(end,:)) > tol
-    [V, res, it, Hsq] = Krylov_Schur_Av_restart(V,f,m,k, it);
+while max(resid(end,:)) > tol && it<itmax
+    [V, res, it, Hsq,K] = Krylov_Schur_Av_restart(V,f,m,k, it);
     resid = [resid; res(end,:)];
 end
 
 th = sort(real(eig(Hsq)), "descend");%problema di Ritz e autovalori approssimati
-
+ite = 1:size(resid,1);
+figure();
+plot(ite, resid(:,1:K));
 % funziona ma i residui oscillano molto
 

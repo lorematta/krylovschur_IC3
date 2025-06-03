@@ -1,3 +1,11 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% IMPLEMENTAZIONE KRYLOV-SCHUR
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 %%
 clear all
 clc
@@ -250,15 +258,31 @@ Hsq = V'*A*V; %Matrice quadrata di Heissemberg finale
 th = sort(real(eig(Hsq)), "descend");%problema di Ritz e autovalori approssimati
 end
 
-%% A : we have A matrix explicit
-%restart 
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% SIMULAZIONE SITUAZIONE IN SLEPC
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% A : we have A matrix explicit restart
+
+resid = (inf);
+tol = 1e-6;
 [V, res, it] = Krylov_Schur(v,A,m,k,0);
-res = max(res(end,:));
-[V, res, it] = Krylov_Schur_restart(V,A,m,k, it);
-res = max(res(end,:));
-[V, res, it] = Krylov_Schur_restart(V,A,m,k, it);
-res = max(res(end,:));
-Hsq = V'*A*V; %Matrice quadrata di Heissemberg finale
+resid = [resid; res];  %ricorda che il residuo in uscita è il residuo associato all'autovalore 
+                       %meno vicino alla convergenza 
+
+while  max(resid(end,:)) > tol
+    [V, res, it] = Krylov_Schur_restart(V,A,m,k, it);
+    resid = [resid; res(end,:)];
+end
+
+Hsq = V'*A*V; %Matrice quadrata di Hessemberg finale
 th = sort(real(eig(Hsq)), "descend");%problema di Ritz e autovalori approssimati
 
 
@@ -271,31 +295,28 @@ clear all
 clc
 itmax = 1000;
 n = 100;
-f = funA(n);
+[Q, ~] = qr(randn(n));         % matrice ortonormale
+[f,lf] = funA(Q,n);
 v = rand(n,1);
 v = v/norm(v);
 m = 40;
-k = 2;
-
+k = 2; 
+lf = sort(real(lf), "descend");
 
 
 %%
-[Vm, res, it] = Krylov_Schur_Av(v,f,m,k,0);
-[Vm,~] = qr(Vm,0);
-[Vm, res, it, Hsq] = Krylov_Schur_Av_restart(Vm,f,m,k, it);
-res = max(res(end,:));
-[Vm, res, it, Hsq] = Krylov_Schur_Av_restart(Vm,f,m,k, it);
-res = max(res(end,:));
-[Vm, res, it, Hsq] = Krylov_Schur_Av_restart(Vm,f,m,k, it);
-res = max(res(end,:));
-[Vm, res, it, Hsq] = Krylov_Schur_Av_restart(Vm,f,m,k, it);
-res = max(res(end,:));
-[Vm, res, it, Hsq] = Krylov_Schur_Av_restart(Vm,f,m,k, it);
-res = max(res(end,:));
-[Vm, res, it, Hsq] = Krylov_Schur_Av_restart(Vm,f,m,k, it);
-res = max(res(end,:));
-[Vm, res, it, Hsq] = Krylov_Schur_Av_restart(Vm,f,m,k, it);
-res = max(res(end,:));
+
+resid = inf*ones(1,k);
+tol = 1e-6;
+[V, res, it] = Krylov_Schur_Av(v,f,m,k,0);
+resid = [resid; res(end,:)];
+
+while max(resid(end,:)) > tol
+    [V, res, it, Hsq] = Krylov_Schur_Av_restart(V,f,m,k, it);
+    resid = [resid; res(end,:)];
+end
+
 th = sort(real(eig(Hsq)), "descend");%problema di Ritz e autovalori approssimati
 
+% funziona ma i residui oscillano molto
 

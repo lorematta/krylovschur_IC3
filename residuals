@@ -1,0 +1,16 @@
+function resid = residuals(Hsq,K,V,f)
+
+resid = [];
+[y,th] = eig(Hsq);
+    
+[~, idx2] = sort(real(diag(th)), "descend");
+th = th(idx2, idx2);
+y = y(:, idx2);
+
+for i=1:K
+    yi = y(:,i);
+    xi = V*yi;
+    li = th(i,i);
+    resid(i) = norm(f(xi)-li*xi);
+end
+end

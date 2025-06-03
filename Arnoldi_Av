@@ -1,4 +1,5 @@
-function [V, H, r, b] = Arnoldi_Av(v,f, m)
+
+function [V, H, r, b] = Arnoldi_Av(V_,f, m)
 %in questo caso f è il funzionale costurito fuori da arnoldi che calcola 
 %implicitamente A*v
 
@@ -6,21 +7,21 @@ function [V, H, r, b] = Arnoldi_Av(v,f, m)
 %     error("initial vector with no unitary norm");
 % end
 
-n = length(f(v));
+n = length(f(V_(:,1)));
 
 if m > n
     error("Krylov subspace cannot have dimension bigger than original vector space");
 end
 
 H = [];
-V = v;
+V = V_;
 r = [];
 tol = 1e-12;
 
 for i = 1:m-1
-    r = f(v);
-    h = V'*r;
-    r = r - V*h; % se a questo punto si crea r = 0 signfica che il sottospazio di krylov ha raggiunto la sua
+    r = f(V(:,i));
+    h = V(:,1:i)'*r;
+    r = r - V(:,1:i)*h; % se a questo punto si crea r = 0 signfica che il sottospazio di krylov ha raggiunto la sua
                  % massima dimensione 
 
                  % si osserva che da qui non c'è una perfetta
@@ -38,13 +39,11 @@ for i = 1:m-1
 
     H = [H, h; zeros(1,i-1), b];
     end
-    v = r/b;
-    V (:,i+1) = v;   % attenzione, V è generalmente rettangolare (a meno che il sottospazio di krylov non coincida 
-                     % con lo spazio di partenza quindi V'V è identità
-                     % ma V V' no
-                     
+    V (:,i+1) = r/b;   % attenzione, V è generalmente rettangolare (a meno che il sottospazio di krylov non coincida 
+                       % con lo spazio di partenza quindi V'V è identità
+                       % ma V V' no  
 end
-r = f(v);
+r = f(V(:,m));
 h = V'*r;
 H = [H,h];
 

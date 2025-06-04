@@ -1,4 +1,5 @@
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % IMPLEMENTAZIONE KRYLOV-SCHUR
@@ -271,7 +272,7 @@ end
 
 %% A : we have A matrix explicit restart
 
-resid = (inf);
+resid = inf*ones(1,k);
 tol = 1e-6;
 [V, res, it] = Krylov_Schur(v,A,m,k,0);
 resid = [resid; res];  %ricorda che il residuo in uscita è il residuo associato all'autovalore 
@@ -296,7 +297,7 @@ plot(ite, resid(:,1:K));
 clear all
 clc
 itmax = 2000;
-n = 1000;
+n = 100;
 [Q, ~] = qr(randn(n));         % matrice ortonormale
 [f,lf] = funA(Q,n);
 v = rand(n,1);
@@ -307,13 +308,42 @@ lf = sort(real(lf), "descend");
 
 
 %%
+
+clear all
+clc
+itmax = 1000;
+
+A = diag([-10 -54 -9 -79*i -6 5 -4+58*i -3  0.1  -2+i*2 -3 -8 -15 -79 -56]);
+
+[f,lf] = funA(A);
+v =  [-0.318776518738141
+      0.0639759007484543
+      0.415465966431780
+      0.412865343101648
+     -0.398050495567505
+      0.501360402094415
+      0.204972149846485
+      0.0704301790141458
+     -0.0698817501137223
+     -0.299257336233650
+     0.3519413984465254
+     -0.254546548468435
+     0.6546846849846849
+     0.3369971146546424
+     -0.47484544874973598];
+
+v = v / norm(v);
+m = 14; 
+k = 3;
+
+%%
 resid = inf*ones(1,k);
 tol = 1e-6;
-[V, res, it] = Krylov_Schur_Av(v,f,m,k,0);
+[V, res, it, Hsq, K] = Krylov_Schur_Av(v,f,m,k,0);
 resid = [resid; res(end,:)];
 
 while max(resid(end,:)) > tol && it<itmax
-    [V, res, it, Hsq,K] = Krylov_Schur_Av_restart(V,f,m,k, it);
+    [V, res, it, Hsq, K] = Krylov_Schur_Av_restart(V,f,m,k, it);
     resid = [resid; res(end,:)];
 end
 

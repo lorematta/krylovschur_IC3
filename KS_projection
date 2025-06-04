@@ -1,0 +1,8 @@
+function [Vk, Hk] = KS_projection(Q_, V, Hsq, k)
+
+Qw = Q_(:, 1:k);
+Vk = V * Qw; 
+Hk = Qw'*Hsq*Qw;
+[Vk, ~] = qr(Vk, 0);       
+
+end

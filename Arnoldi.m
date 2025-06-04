@@ -1,3 +1,4 @@
+
 function [V, H, r, b] = Arnoldi(v,A, m)
 
 Toll = 1e-3;
@@ -32,9 +33,9 @@ for i = 1:m-1
     end
 
     if i == 1
-        H = [0,h;0,b];
+        H = [h;b];
     else
-    H = [H, h; zeros(1,i), b];
+        H = [H, h; zeros(1,i-1), b];
     end
     v = r/b;
     V (:,i+1) = v;   % attenzione, V è generalmente rettangolare (a meno che il sottospazio di krylov non coincida 

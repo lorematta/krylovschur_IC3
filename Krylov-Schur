@@ -1,16 +1,20 @@
 
+
 function [V, resid, it, K] = Krylov_Schur(v,A,m,k,itmax)
 
 %Attenzione!!! non funziona bene se k non è molto piu piccolo di m 
 
-res = 1;
+res = inf;
 it = 0;
-V = Arnoldi(v,A,m);
+[V,Hsq] = Arnoldi(v,A,m);
 resid = zeros(itmax,k);
 
 while (res > 1e-7 && it<= itmax)
 it = it+1;
-Hsq = V'*A*V; %Matrice quadrata di Hessemberg
+
+%Hsq = V'*A*V; %Matrice quadrata di Hessemberg non sfrutto la
+%semplificazione di avere gia A...
+
 [Q,T] = schur(Hsq);
 lt = eig(T);
 
@@ -28,7 +32,7 @@ end
 %     disp("nessun autovalore wanted trovato.");
 %     return;
 % end
-
+K = min (k, k_);
 % Prendo i primi k autovalori con parte reale positiva
 wanted = false(length(lt),1);
 wanted(trov(1:min(k, length(trov)))) = true;
@@ -40,14 +44,14 @@ Qw = Q_ord(:, 1:min(k_,k));
 
 %ricostruzione sottosp. di dimensione k
 Vk = V * Qw; 
+Hk = Qw'*Hsq*Qw;
 [Vk, ~] = qr(Vk, 0);
 
-K = min (k, k_);
 %riespansione a V[nxm]
-V = bloccoArnoldi(Vk,A,m,K);
+[V,Hsq] = bloccoArnoldi(Vk,A,m,K, Hk);
 
 %verifica convergenza
-Hsq = V'*A*V; %Matrice quadrata di Hessemberg
+%Hsq = V'*A*V; %Matrice quadrata di Hessemberg
 [y,th] = eig(Hsq);
 
 %riordino th di autovalori approssimati secondo wanted

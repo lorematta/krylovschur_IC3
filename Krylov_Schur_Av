@@ -1,5 +1,6 @@
 
-function [V, resid, it, K] = Krylov_Schur_Av(v,f,m,k,itmax)
+
+function [V, resid, it, Hsq,  K] = Krylov_Schur_Av(v,f,m,k,itmax)
 
 %Attenzione!!! non funziona bene se k non è molto piu piccolo di m 
 
@@ -42,11 +43,12 @@ while (res > 1e-7 && it<= itmax)
 
     %ricostruzione sottosp. di dimensione k
     Vk = V * Qw; 
+    Hk = Qw'*Hsq'*Qw;
     [Vk, ~] = qr(Vk, 0);
 
     
     %riespansione a V[nxm]
-    [V,Hsq] = bloccoArnoldi_Av(Vk,f,m,K, Hsq);
+    [V,Hsq] = bloccoArnoldi_Av(Vk,f,m,K, Hk);
 
     %verifica convergenza
     %Hsq = H(1:m,1:m); %Matrice quadrata di Hessemberg

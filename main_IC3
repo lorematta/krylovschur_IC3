@@ -1,10 +1,11 @@
+
 clear all
 clc
 
 itmax = 2000;
 n = 100;
-[Q, ~] = qr(randn(n));        
-[f,lf] = funA(Q,n);
+A = rand(n,n);        
+[f,lf] = funA(A);
 v = rand(n,1);
 v = v/norm(v);
 m = 40;
@@ -14,7 +15,7 @@ lf = sort(real(lf), "descend");
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 resid = inf*ones(1,k);
 tol = 1e-6;
-it = 1;
+it = 0;
 
 [V,Hsq] = Arnoldi_Av(v,f,m);
 
@@ -22,10 +23,8 @@ while max(resid(end,:)) > tol && it<itmax
 
     [Q,T] = schur(Hsq);                           %schur decomposition
     [Q_ord, K] = eig_selection(Q,T,k);            %
-     Qw = Q_ord(:, 1:K);
-     Vk = V * Qw; 
-    [Vk, ~] = qr(Vk, 0);                          %normalization
-    [V,Hsq] = bloccoArnoldi_Av(Vk,f,m,K, Hsq);    %Krylov-Schur core
+    [Vk, Hk] = KS_projection(Q_ord, V, Hsq,  K);        %Krylov_Schur projection 
+    [V,Hsq] = bloccoArnoldi_Av(Vk,f,m,K, Hk);     %
                                                   %
     resid = [resid;residuals(Hsq,K,V,f)];         %residuals
     it = it+1;
@@ -34,6 +33,3 @@ end
 ite = 1:size(resid,1);
 figure();
 plot(ite, resid(:,1:K));
-
-
-

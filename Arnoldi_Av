@@ -1,4 +1,5 @@
 
+
 function [V, H, r, b] = Arnoldi_Av(V_,f, m)
 %in questo caso f è il funzionale costurito fuori da arnoldi che calcola 
 %implicitamente A*v
@@ -29,7 +30,7 @@ for i = 1:m-1
     b = norm(r);
 
     if b < tol
-        fprintf("breakdown numerico")
+        fprintf("breakdown numerico");
         return 
     end
 
@@ -37,7 +38,7 @@ for i = 1:m-1
         H = [h;b];
     else
 
-    H = [H, h; zeros(1,i-1), b];
+        H = [H, h; zeros(1,i-1), b];
     end
     V (:,i+1) = r/b;   % attenzione, V è generalmente rettangolare (a meno che il sottospazio di krylov non coincida 
                        % con lo spazio di partenza quindi V'V è identità

@@ -11,6 +11,7 @@
         Mat            A;
         EPS            eps;
         EPS            eps2;
+        BV             bv;
         EPSType        type;
         EPSStop        stop;
         PetscInt       nconv = 0; 
@@ -65,10 +66,11 @@
         PetscInt k = m;
         Vec *V;
         PetscCall(PetscMalloc1(k, &V));
+        PetscCall(EPSGetConverged(eps, &nconv));
 
-        for (PetscInt i = 0; i < k; i++) {
+        for (PetscInt i = 0; i < nconv; i++) {
             PetscCall(VecDuplicate(v0, &V[i]));
-            PetscCall(EPSGetEigenvector(eps, i, V[i], NULL));
+            PetscErrorCode EPSGetBV(eps, bv);
         }
 
         /* Save Restart Data */
@@ -88,7 +90,7 @@
         PetscCall(EPSSetType(eps2, EPSKRYLOVSCHUR));
         PetscCall(EPSSetFromOptions(eps2));
 
-        if (!V_restart || !k_restart <=0 ) {
+        if (!V_restart || k_restart <=0 ) {
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Error: V_restart is NULL\n"));
         return -1;
         }
@@ -119,7 +121,43 @@
         PetscCall(EPSDestroy(&eps2));
         PetscCall(MatDestroy(&A));
         PetscCall(VecDestroy(&v0));
+        PetscCall(BVDestroy(&bv));
 
         return 0;
 
+    }
+
+
+    PetscErrorCode MatMarkovModel(PetscInt m,Mat A) {
+  
+        const PetscReal cst = 0.5/(PetscReal)(m-1);
+        PetscReal       pd,pu;
+        PetscInt        Istart,Iend,i,j,jmax,ix=0;
+
+        PetscFunctionBeginUser;
+        PetscCall(MatGetOwnershipRange(A,&Istart,&Iend));
+        for (i=1;i<=m;i++) {
+            jmax = m-i+1;
+            for (j=1;j<=jmax;j++) {
+                ix = ix + 1;
+                if (ix-1<Istart || ix>Iend) continue;  /* compute only owned rows */
+                if (j!=jmax) {
+                    pd = cst*(PetscReal)(i+j-1);
+                    /* north */
+                    if (i==1) PetscCall(MatSetValue(A,ix-1,ix,2*pd,INSERT_VALUES));
+                    else PetscCall(MatSetValue(A,ix-1,ix,pd,INSERT_VALUES));
+                    /* east */
+                    if (j==1) PetscCall(MatSetValue(A,ix-1,ix+jmax-1,2*pd,INSERT_VALUES));
+                    else PetscCall(MatSetValue(A,ix-1,ix+jmax-1,pd,INSERT_VALUES));
+                }
+                /* south */
+                pu = 0.5 - cst*(PetscReal)(i+j-3);
+                if (j>1) PetscCall(MatSetValue(A,ix-1,ix-2,pu,INSERT_VALUES));
+                /* west */
+                if (i>1) PetscCall(MatSetValue(A,ix-1,ix-jmax-2,pu,INSERT_VALUES));
+            }
+        }
+        PetscCall(MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY));
+        PetscCall(MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY));
+        PetscFunctionReturn(PETSC_SUCCESS);
     }

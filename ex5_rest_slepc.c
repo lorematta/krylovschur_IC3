@@ -9,17 +9,19 @@
     int main(int argc, char **argv) {
         Vec            v0;
         Mat            A;
-        EPS            eps;
-        EPS            eps2;
+        EPS            eps, eps2;
         BV             bv;
         EPSType        type;
         EPSStop        stop;
-        PetscInt       nconv = 0; 
-        PetscReal      thres;
-        PetscInt       N, m = 15, nev, k_restart;
-        Vec           *V_restart;
+        PetscInt       nconv = 0, k = 0; 
+        PetscInt       N, m = 15, nev, k_restart = 0;
+        Vec           *V_restart = NULL, *V = NULL;
         PetscMPIInt    rank;
-        PetscBool      terse;
+
+
+
+
+        /* Begin*/
 
         PetscCall(SlepcInitialize(&argc, &argv, NULL, NULL));
 
@@ -40,7 +42,7 @@
         PetscCall(EPSSetProblemType(eps, EPS_NHEP));
         PetscCall(EPSSetType(eps, EPSKRYLOVSCHUR)); // Ensure Krylov-Schur is used
         PetscCall(EPSSetFromOptions(eps));
-
+       
         /* Set Initial Vector */
         PetscCall(MatCreateVecs(A, &v0, NULL));
         PetscCallMPI(MPI_Comm_rank(PETSC_COMM_WORLD, &rank));
@@ -56,32 +58,64 @@
         PetscCall(EPSSetInitialSpace(eps, 1, &v0));
 
         /* Force a single iteration */
-        PetscCall(EPSSetTolerances(eps, PETSC_DEFAULT, 1)); 
+        //PetscCall(EPSSetTolerances(eps, 1e-2, 1)); 
+        PetscInt nv, cv,mpd;
+        PetscCall(EPSGetDimensions(eps, &nv , &cv, &mpd));
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, " nv = %d, cv = %d\n", nv, cv));
 
-
-
+        /* SOLVE */
         PetscCall(EPSSolve(eps));
 
-        /* Extract Basis for Restart */
-        PetscInt k = m;
-        Vec *V;
-        PetscCall(PetscMalloc1(k, &V));
-        PetscCall(EPSGetConverged(eps, &nconv));
 
-        for (PetscInt i = 0; i < nconv; i++) {
-            PetscCall(VecDuplicate(v0, &V[i]));
-            PetscErrorCode EPSGetBV(eps, bv);
+        /* Retrieve the BV object from eps.
+        This call initializes bv so that it can be used by BVGetSizes, etc. */
+        PetscCall(EPSGetBV(eps, &bv));
+        PetscInt low, high;
+        PetscCall(BVGetSizes(bv, &low , &high, &k));
+
+        //PetscInt low, high;
+        //PetscCall(BVGetActiveColumns(bv, &low, &high));
+        //k = m;
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "BV active columns: low = %d, high = %d\n", k, k));
+        k = 2;
+        PetscCall(PetscMalloc1(k, &V));
+
+        for (PetscInt i = 0; i < k; i++) {
+            Vec vi;
+            /* Retrieve the i-th column from the BV */
+            PetscCall(BVGetColumn(bv,  i, &vi));
+            
+            /* Duplicate the column so that it is independent of the BV object */
+            PetscCall(VecDuplicate(vi, &V[i]));
+            PetscCall(VecCopy(vi, V[i]));
+      
+            /* Restore the column after you're done making your copy */
+            PetscCall(BVRestoreColumn(bv,  i, &vi));
         }
 
+        /* Print*/
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing all vectors in matrix V:\n"));
+        for (PetscInt i = 0; i < k; i++) {
+            PetscCall(VecView(V[i], PETSC_VIEWER_STDOUT_WORLD));
+        }
         /* Save Restart Data */
         PetscCall(SaveRestartData(V, k));
 
+
         /* Cleanup */
-        for (PetscInt i = 0; i < k; ++i) PetscCall(VecDestroy(&V[i]));
+        for (PetscInt i = 0; i < k; ++i) {
+            PetscCall(VecDestroy(&V[i]));
+        }
         PetscFree(V);
 
         /* Load Restart Data */
         PetscCall(LoadRestartData(&V_restart, &k_restart, v0));
+        /* Print*/
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing V_restart:\n"));
+        for (PetscInt i = 0; i < k_restart; i++) {
+            PetscCall(VecView(V_restart[i], PETSC_VIEWER_STDOUT_WORLD));
+        }
+
 
         /* Creating eps2*/
         PetscCall(EPSCreate(PETSC_COMM_WORLD, &eps2));
@@ -90,12 +124,15 @@
         PetscCall(EPSSetType(eps2, EPSKRYLOVSCHUR));
         PetscCall(EPSSetFromOptions(eps2));
 
+
+
         if (!V_restart || k_restart <=0 ) {
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Error: V_restart is NULL\n"));
-        return -1;
+            PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Error: V_restart is NULL\n"));
+            return -1;
         }
 
         PetscCall(EPSSetInitialSpace(eps2, k_restart, V_restart));
+        //PetscCall(EPSSetInitialSpace(eps2, 1, &v0));
 
         /* Second solving*/
         PetscCall(EPSSolve(eps2));
@@ -104,24 +141,27 @@
         /* Check Convergence */
         PetscCall(EPSGetConverged(eps2, &nconv));
         PetscBool converged = (nconv > 0);
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Iteration %" PetscInt_FMT ": Converged? %s\n", converged ? "Yes" : "No"));
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Converged? %s\n", converged ? "Yes" : "No"));
 
         /* Formal end*/
 
         if  (V_restart) {
 
             for (PetscInt i = 0; i < k_restart; ++i) {
-                if (V_restart[i])   PetscCall(VecDestroy(&V_restart[i]));
+                if (V_restart[i]){
+                    PetscCall(VecDestroy(&V_restart[i]));
+                }   
             }
     
             PetscFree(V_restart);
         }
 
-        PetscCall(EPSDestroy(&eps));
-        PetscCall(EPSDestroy(&eps2));
-        PetscCall(MatDestroy(&A));
-        PetscCall(VecDestroy(&v0));
-        PetscCall(BVDestroy(&bv));
+        //PetscCall(EPSDestroy(&eps));
+        //PetscCall(EPSDestroy(&eps2));
+        //PetscCall(MatDestroy(&A));
+        //PetscCall(VecDestroy(&v0));
+        //PetscCall(BVDestroy(&bv));
+        //PetscCall(SlepcFinalize());
 
         return 0;
 

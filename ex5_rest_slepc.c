@@ -1,10 +1,6 @@
     #include <slepceps.h>
     #include "restart.h"
 
-    /* User-defined routines */
-    PetscErrorCode MatMarkovModel(PetscInt m, Mat A);
-    PetscErrorCode SaveRestartData(Vec *V, PetscInt k);
-    PetscErrorCode LoadRestartData(Vec **V_restart, PetscInt *k_restart, Vec v0);
 
     int main(int argc, char **argv) {
         Vec            v0;
@@ -58,7 +54,7 @@
         PetscCall(EPSSetInitialSpace(eps, 1, &v0));
 
         /* Force a single iteration */
-        PetscCall(EPSSetTolerances(eps, 1e-2, 1)); 
+        PetscCall(EPSSetTolerances(eps, 1e-8, 4)); 
         PetscInt nv, cv,mpd;
         PetscCall(EPSGetDimensions(eps, &nv , &cv, &mpd));
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, " nv = %d, cv = %d\n", nv, cv));
@@ -78,11 +74,16 @@
             PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing eigenvectors of eps:\n"));
             for (PetscInt i=0;i<nconv;i++) {
                 PetscCall(EPSGetEigenvector(eps,i,xr,xi));
-                PetscCall(VecView(xr,PETSC_VIEWER_STDOUT_WORLD));
+                //PetscCall(VecView(xr,PETSC_VIEWER_STDOUT_WORLD));
             }
 
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
         
+        PetscReal kr, ki;
+        for (PetscInt i=0;i<nconv;i++) {
+            PetscCall(EPSGetEigenvalue(eps,i,&kr,&ki));
+            PetscCall(PetscPrintf(PETSC_COMM_WORLD, "eigenvalues eps, Re: %f, Im: %f\n", kr, ki));
+        }
 
         /* Retrieve the BV object from eps.
         This call initializes bv so that it can be used by BVGetSizes, etc. */
@@ -112,9 +113,9 @@
 
         /* Print*/
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing all vectors in matrix before saving them V:\n"));
-        for (PetscInt i = 0; i < k; i++) {
+        /*for (PetscInt i = 0; i < k; i++) {
             PetscCall(VecView(V[i], PETSC_VIEWER_STDOUT_WORLD));
-        }
+        }*/
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
         /* Save Restart Data */
         PetscCall(SaveRestartData(V, k));
@@ -152,7 +153,7 @@
         }
 
         PetscCall(EPSSetInitialSpace(eps2, k_restart, V_restart));
-        
+
 
         /* Second solving*/
         PetscCall(EPSSolve(eps2));
@@ -166,13 +167,13 @@
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing eigenvectors of eps2:\n"));
             for (PetscInt i=0;i<nconv;i++) {
                 PetscCall(EPSGetEigenvector(eps2,i,xr,xi));
-                PetscCall(VecView(xr,PETSC_VIEWER_STDOUT_WORLD));
+                //PetscCall(VecView(xr,PETSC_VIEWER_STDOUT_WORLD));
             }
 
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
         /* Formal end*/
 
-        PetscReal kr, ki;
+        //PetscReal kr, ki;
         for (PetscInt i=0;i<nconv;i++) {
             PetscCall(EPSGetEigenvalue(eps2,i,&kr,&ki));
             PetscCall(PetscPrintf(PETSC_COMM_WORLD, "eigenvalues, Re: %f, Im: %f\n", kr, ki));
@@ -198,39 +199,4 @@
 
         return 0;
 
-    }
-
-
-    PetscErrorCode MatMarkovModel(PetscInt m,Mat A) {
-  
-        const PetscReal cst = 0.5/(PetscReal)(m-1);
-        PetscReal       pd,pu;
-        PetscInt        Istart,Iend,i,j,jmax,ix=0;
-
-        PetscFunctionBeginUser;
-        PetscCall(MatGetOwnershipRange(A,&Istart,&Iend));
-        for (i=1;i<=m;i++) {
-            jmax = m-i+1;
-            for (j=1;j<=jmax;j++) {
-                ix = ix + 1;
-                if (ix-1<Istart || ix>Iend) continue;  /* compute only owned rows */
-                if (j!=jmax) {
-                    pd = cst*(PetscReal)(i+j-1);
-                    /* north */
-                    if (i==1) PetscCall(MatSetValue(A,ix-1,ix,2*pd,INSERT_VALUES));
-                    else PetscCall(MatSetValue(A,ix-1,ix,pd,INSERT_VALUES));
-                    /* east */
-                    if (j==1) PetscCall(MatSetValue(A,ix-1,ix+jmax-1,2*pd,INSERT_VALUES));
-                    else PetscCall(MatSetValue(A,ix-1,ix+jmax-1,pd,INSERT_VALUES));
-                }
-                /* south */
-                pu = 0.5 - cst*(PetscReal)(i+j-3);
-                if (j>1) PetscCall(MatSetValue(A,ix-1,ix-2,pu,INSERT_VALUES));
-                /* west */
-                if (i>1) PetscCall(MatSetValue(A,ix-1,ix-jmax-2,pu,INSERT_VALUES));
-            }
-        }
-        PetscCall(MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY));
-        PetscCall(MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY));
-        PetscFunctionReturn(PETSC_SUCCESS);
     }

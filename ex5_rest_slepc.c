@@ -65,21 +65,24 @@
 
         /* SOLVE */
         PetscCall(EPSSolve(eps));
-        //PetscCall(EPSGetConverged(eps, &nconv));
 
 
-        //PetscCall(VecDuplicate(v0, &xr));
-        //PetscCall(VecDuplicate(v0, &xi));
+        PetscCall(EPSGetConverged(eps, &nconv));
+        PetscBool converged = (nconv > 0);
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Converged? %s\n", converged ? "Yes" : "No"));
+
+        PetscCall(VecDuplicate(v0, &xr));
+        PetscCall(VecDuplicate(v0, &xi));
 
         /* Printing eigenvectors*/
-        /*    PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing eigenvectors of eps:\n"));
+            PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing eigenvectors of eps:\n"));
             for (PetscInt i=0;i<nconv;i++) {
                 PetscCall(EPSGetEigenvector(eps,i,xr,xi));
                 PetscCall(VecView(xr,PETSC_VIEWER_STDOUT_WORLD));
             }
 
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
-        */
+        
 
         /* Retrieve the BV object from eps.
         This call initializes bv so that it can be used by BVGetSizes, etc. */
@@ -91,7 +94,7 @@
         //PetscCall(BVGetActiveColumns(bv, &low, &high));
         //k = m;
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "BV active columns: low = %d, high = %d\n", k, k));
-        k = 2;
+        k = nv;
         PetscCall(PetscMalloc1(k, &V));
 
         for (PetscInt i = 0; i < k; i++) {
@@ -126,11 +129,11 @@
         /* Load Restart Data */
         PetscCall(LoadRestartData(&V_restart, &k_restart, v0));
         /* Print*/
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing V_restart after having loaded them:\n"));
+        /*PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing V_restart after having loaded them:\n"));
         for (PetscInt i = 0; i < k_restart; i++) {
             PetscCall(VecView(V_restart[i], PETSC_VIEWER_STDOUT_WORLD));
         }
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));*/
 
 
 
@@ -149,7 +152,7 @@
         }
 
         PetscCall(EPSSetInitialSpace(eps2, k_restart, V_restart));
-        //PetscCall(EPSSetInitialSpace(eps2, 1, &v0));
+        
 
         /* Second solving*/
         PetscCall(EPSSolve(eps2));
@@ -157,10 +160,23 @@
 
         /* Check Convergence */
         PetscCall(EPSGetConverged(eps2, &nconv));
-        PetscBool converged = (nconv > 0);
+        converged = (nconv > 0);
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Converged? %s\n", converged ? "Yes" : "No"));
+        
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing eigenvectors of eps2:\n"));
+            for (PetscInt i=0;i<nconv;i++) {
+                PetscCall(EPSGetEigenvector(eps2,i,xr,xi));
+                PetscCall(VecView(xr,PETSC_VIEWER_STDOUT_WORLD));
+            }
 
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
         /* Formal end*/
+
+        PetscReal kr, ki;
+        for (PetscInt i=0;i<nconv;i++) {
+            PetscCall(EPSGetEigenvalue(eps2,i,&kr,&ki));
+            PetscCall(PetscPrintf(PETSC_COMM_WORLD, "eigenvalues, Re: %f, Im: %f\n", kr, ki));
+        }
 
         if  (V_restart) {
 

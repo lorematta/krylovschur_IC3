@@ -36,38 +36,71 @@ PetscErrorCode LoadRestartData(Vec **V_restart, PetscInt *k_restart, Vec v0) {
 
 }
 
-/*PetscErrorCode MatMult_MarkovModel(Mat A, Vec x, Vec y){
+PetscErrorCode MatMult_MarkovModel(Mat A, Vec x, Vec y) {
     void              *ctx;
-    int               nx,lo,i,j;
+    PetscInt          nx, i, j, jmax, ix = 0;
     const PetscScalar *px;
     PetscScalar       *py;
+    PetscReal         cst;
 
-   
-    PetscCall(MatShellGetContext(A,&ctx));
-    nx = *(int*)ctx;
-    PetscCall(VecGetArrayRead(x,&px));
-    PetscCall(VecGetArray(y,&py));
+    PetscFunctionBeginUser;
 
-    tv(nx,&px[0],&py[0]);
-    for (i=0;i<nx;i++) py[i] -= px[nx+i];
+    /* Retrieve the size context from MatShell */
+    PetscCall(MatShellGetContext(A, &ctx));
+    if (!ctx) {
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Error: MatShell context is NULL!\n"));
+        PetscFunctionReturn(PETSC_ERR_ARG_WRONG);
+    }
+    nx = *((PetscInt*)ctx);
+    if (nx <= 0) {
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Error: Invalid nx value (%d)\n", nx));
+        PetscFunctionReturn(PETSC_ERR_ARG_WRONG);
+    }
+    cst = 0.5 / (PetscReal)(nx - 1);
 
-    for (j=2;j<nx;j++) {
-        lo = (j-1)*nx;
-        tv(nx,&px[lo],&py[lo]);
-        for (i=0;i<nx;i++) py[lo+i] -= px[lo-nx+i] + px[lo+nx+i];
+    /* Get vector arrays */
+    PetscCall(VecGetArrayRead(x, &px));
+    PetscCall(VecGetArray(y, &py));
+
+    /* Initialize y vector */
+    PetscCall(VecSet(y, 0.0));
+
+    /* Apply matrix-vector multiplication */
+    for (i = 1; i <= nx; i++) {
+        jmax = nx - i + 1;
+        for (j = 1; j <= jmax; j++) {
+            ix++;
+
+            if (ix >= nx) continue; // Prevent out-of-bounds errors
+
+            /* Compute transition probabilities */
+            PetscReal pd = cst * (PetscReal)(i + j - 1);
+            PetscReal pu = 0.5 - cst * (PetscReal)(i + j - 3);
+
+            /* North */
+            if (i == 1 && ix < nx) py[ix - 1] += 2 * pd * px[ix];
+            else if (ix < nx) py[ix - 1] += pd * px[ix];
+
+            /* East */
+            if (j == 1 && (ix + jmax - 1) < nx) py[ix - 1] += 2 * pd * px[ix + jmax - 1];
+            else if ((ix + jmax - 1) < nx) py[ix - 1] += pd * px[ix + jmax - 1];
+
+            /* South */
+            if (j > 1 && ix - 2 >= 0) py[ix - 1] += pu * px[ix - 2];
+
+            /* West */
+            if (i > 1 && ix - jmax - 2 >= 0) py[ix - 1] += pu * px[ix - jmax - 2];
+        }
     }
 
-    lo = (nx-1)*nx;
-    tv(nx,&px[lo],&py[lo]);
-    for (i=0;i<nx;i++) py[lo+i] -= px[lo-nx+i];
+    /* Restore vector arrays */
+    PetscCall(VecRestoreArrayRead(x, &px));
+    PetscCall(VecRestoreArray(y, &py));
 
-    PetscCall(VecRestoreArrayRead(x,&px));
-    PetscCall(VecRestoreArray(y,&py));
-
-    return 0;
+    PetscFunctionReturn(PETSC_SUCCESS);
 }
 
-*/
+
 PetscErrorCode MatMarkovModel(PetscInt m,Mat A) {
   
     const PetscReal cst = 0.5/(PetscReal)(m-1);

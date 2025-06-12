@@ -58,27 +58,28 @@
         PetscCall(EPSSetInitialSpace(eps, 1, &v0));
 
         /* Force a single iteration */
-        //PetscCall(EPSSetTolerances(eps, 1e-2, 1)); 
+        PetscCall(EPSSetTolerances(eps, 1e-2, 1)); 
         PetscInt nv, cv,mpd;
         PetscCall(EPSGetDimensions(eps, &nv , &cv, &mpd));
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, " nv = %d, cv = %d\n", nv, cv));
 
         /* SOLVE */
         PetscCall(EPSSolve(eps));
-        PetscCall(EPSGetConverged(eps, &nconv));
+        //PetscCall(EPSGetConverged(eps, &nconv));
 
 
-        PetscCall(VecDuplicate(v0, &xr));
-        PetscCall(VecDuplicate(v0, &xi));
+        //PetscCall(VecDuplicate(v0, &xr));
+        //PetscCall(VecDuplicate(v0, &xi));
 
         /* Printing eigenvectors*/
-            PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing eigenvectors of eps:\n"));
+        /*    PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing eigenvectors of eps:\n"));
             for (PetscInt i=0;i<nconv;i++) {
                 PetscCall(EPSGetEigenvector(eps,i,xr,xi));
                 PetscCall(VecView(xr,PETSC_VIEWER_STDOUT_WORLD));
             }
 
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
+        */
 
         /* Retrieve the BV object from eps.
         This call initializes bv so that it can be used by BVGetSizes, etc. */
@@ -172,7 +173,7 @@
             PetscFree(V_restart);
         }
 
-        //PetscCall(EPSDestroy(&eps));
+        PetscCall(EPSDestroy(&eps));
         //PetscCall(EPSDestroy(&eps2));
         //PetscCall(MatDestroy(&A));
         //PetscCall(VecDestroy(&v0));

@@ -18,7 +18,7 @@
         Vec           *V_restart = NULL, *V = NULL;
         PetscMPIInt    rank;
 
-
+        Vec            xr,xi;    //need them for eigenvectors printing
 
 
         /* Begin*/
@@ -65,7 +65,20 @@
 
         /* SOLVE */
         PetscCall(EPSSolve(eps));
+        PetscCall(EPSGetConverged(eps, &nconv));
 
+
+        PetscCall(VecDuplicate(v0, &xr));
+        PetscCall(VecDuplicate(v0, &xi));
+
+        /* Printing eigenvectors*/
+            PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing eigenvectors of eps:\n"));
+            for (PetscInt i=0;i<nconv;i++) {
+                PetscCall(EPSGetEigenvector(eps,i,xr,xi));
+                PetscCall(VecView(xr,PETSC_VIEWER_STDOUT_WORLD));
+            }
+
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
 
         /* Retrieve the BV object from eps.
         This call initializes bv so that it can be used by BVGetSizes, etc. */
@@ -94,10 +107,11 @@
         }
 
         /* Print*/
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing all vectors in matrix V:\n"));
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing all vectors in matrix before saving them V:\n"));
         for (PetscInt i = 0; i < k; i++) {
             PetscCall(VecView(V[i], PETSC_VIEWER_STDOUT_WORLD));
         }
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
         /* Save Restart Data */
         PetscCall(SaveRestartData(V, k));
 
@@ -111,10 +125,12 @@
         /* Load Restart Data */
         PetscCall(LoadRestartData(&V_restart, &k_restart, v0));
         /* Print*/
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing V_restart:\n"));
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing V_restart after having loaded them:\n"));
         for (PetscInt i = 0; i < k_restart; i++) {
             PetscCall(VecView(V_restart[i], PETSC_VIEWER_STDOUT_WORLD));
         }
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
+
 
 
         /* Creating eps2*/

@@ -37,68 +37,26 @@ PetscErrorCode LoadRestartData(Vec **V_restart, PetscInt *k_restart, Vec v0) {
 }
 
 PetscErrorCode MatMult_MarkovModel(Mat A, Vec x, Vec y) {
-    void              *ctx;
-    PetscInt          nx, i, j, jmax, ix = 0;
+    void *contex;
     const PetscScalar *px;
     PetscScalar       *py;
-    PetscReal         cst;
 
-    PetscFunctionBeginUser;
+    PetscCall(MatShellGetContext(A, &contex));
+    Mat B = *(Mat*)contex;
+   
+    PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Converged? Matmult\n"));
 
-    /* Retrieve the size context from MatShell */
-    PetscCall(MatShellGetContext(A, &ctx));
-    if (!ctx) {
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Error: MatShell context is NULL!\n"));
-        PetscFunctionReturn(PETSC_ERR_ARG_WRONG);
-    }
-    nx = *((PetscInt*)ctx);
-    if (nx <= 0) {
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Error: Invalid nx value (%d)\n", nx));
-        PetscFunctionReturn(PETSC_ERR_ARG_WRONG);
-    }
-    cst = 0.5 / (PetscReal)(nx - 1);
-
-    /* Get vector arrays */
     PetscCall(VecGetArrayRead(x, &px));
     PetscCall(VecGetArray(y, &py));
 
-    /* Initialize y vector */
-    PetscCall(VecSet(y, 0.0));
+    MatMult(B, x, y);
 
-    /* Apply matrix-vector multiplication */
-    for (i = 1; i <= nx; i++) {
-        jmax = nx - i + 1;
-        for (j = 1; j <= jmax; j++) {
-            ix++;
 
-            if (ix >= nx) continue; // Prevent out-of-bounds errors
-
-            /* Compute transition probabilities */
-            PetscReal pd = cst * (PetscReal)(i + j - 1);
-            PetscReal pu = 0.5 - cst * (PetscReal)(i + j - 3);
-
-            /* North */
-            if (i == 1 && ix < nx) py[ix - 1] += 2 * pd * px[ix];
-            else if (ix < nx) py[ix - 1] += pd * px[ix];
-
-            /* East */
-            if (j == 1 && (ix + jmax - 1) < nx) py[ix - 1] += 2 * pd * px[ix + jmax - 1];
-            else if ((ix + jmax - 1) < nx) py[ix - 1] += pd * px[ix + jmax - 1];
-
-            /* South */
-            if (j > 1 && ix - 2 >= 0) py[ix - 1] += pu * px[ix - 2];
-
-            /* West */
-            if (i > 1 && ix - jmax - 2 >= 0) py[ix - 1] += pu * px[ix - jmax - 2];
-        }
-    }
-
-    /* Restore vector arrays */
     PetscCall(VecRestoreArrayRead(x, &px));
     PetscCall(VecRestoreArray(y, &py));
 
-    PetscFunctionReturn(PETSC_SUCCESS);
 }
+
 
 
 PetscErrorCode MatMarkovModel(PetscInt m,Mat A) {

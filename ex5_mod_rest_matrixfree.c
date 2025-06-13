@@ -3,7 +3,7 @@
 
     int main(int argc, char **argv) {
         Vec            v0;
-        Mat            A;
+        Mat            A,B;
         EPS            eps, eps2;
         BV             bv;
         EPSType        type;
@@ -27,12 +27,16 @@
         
 
         /* Create Matrix-free model */
-        PetscCall(MatCreateShell(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, N, N, &N, &A));
-        PetscCall(MatShellSetOperation(A, MATOP_MULT, (void (*)(void))MatMult_MarkovModel));
+        PetscCall(MatCreate(PETSC_COMM_WORLD, &A));
+        PetscCall(MatSetSizes(A, PETSC_DECIDE, PETSC_DECIDE, N, N));
+        PetscCall(MatSetFromOptions(A));
+        PetscCall(MatMarkovModel(m, A));
+        PetscCall(MatCreateShell(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE, N, N, &A, &B));
+        PetscCall(MatShellSetOperation(B, MATOP_MULT, (void (*)(void))MatMult_MarkovModel));
 
         /* Create Eigensolver */
         PetscCall(EPSCreate(PETSC_COMM_WORLD, &eps));
-        PetscCall(EPSSetOperators(eps, A, NULL));
+        PetscCall(EPSSetOperators(eps, B, NULL));
         PetscCall(EPSSetProblemType(eps, EPS_NHEP));
         PetscCall(EPSSetType(eps, EPSKRYLOVSCHUR)); // Ensure Krylov-Schur is used
         PetscCall(EPSSetFromOptions(eps));
@@ -138,7 +142,7 @@
 
         /* Creating eps2*/
         PetscCall(EPSCreate(PETSC_COMM_WORLD, &eps2));
-        PetscCall(EPSSetOperators(eps2, A, NULL));
+        PetscCall(EPSSetOperators(eps2, B, NULL));
         PetscCall(EPSSetProblemType(eps2, EPS_NHEP));
         PetscCall(EPSSetType(eps2, EPSKRYLOVSCHUR));
         PetscCall(EPSSetFromOptions(eps2));
@@ -198,6 +202,3 @@
         return 0;
 
     }
-
-
-

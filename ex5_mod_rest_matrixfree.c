@@ -73,19 +73,19 @@
         PetscCall(VecDuplicate(v0, &xi));
 
         /* Printing eigenvectors*/
-            PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing eigenvectors of eps:\n"));
+         /*   PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing eigenvectors of eps:\n"));
             for (PetscInt i=0;i<nconv;i++) {
                 PetscCall(EPSGetEigenvector(eps,i,xr,xi));
                 //PetscCall(VecView(xr,PETSC_VIEWER_STDOUT_WORLD));
             }
-
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
         
-        PetscReal kr, ki;
+        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
+        */
+        /*PetscReal kr, ki;
         for (PetscInt i=0;i<nconv;i++) {
             PetscCall(EPSGetEigenvalue(eps,i,&kr,&ki));
             PetscCall(PetscPrintf(PETSC_COMM_WORLD, "eigenvalues eps, Re: %f, Im: %f\n", kr, ki));
-        }
+        }*/
 
         /* Retrieve the BV object from eps.
         This call initializes bv so that it can be used by BVGetSizes, etc. */
@@ -114,7 +114,7 @@
         }
 
         /* Print*/
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing all vectors in matrix before saving them V:\n"));
+        //PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing all vectors in matrix before saving them V:\n"));
         /*for (PetscInt i = 0; i < k; i++) {
             PetscCall(VecView(V[i], PETSC_VIEWER_STDOUT_WORLD));
         }*/
@@ -135,26 +135,7 @@
         /*PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing V_restart after having loaded them:\n"));
         for (PetscInt i = 0; i < k_restart; i++) {
             PetscCall(VecView(V_restart[i], PETSC_VIEWER_STDOUT_WORLD));
-        }
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));*/
-
-
-
-        /* Creating eps2*/
-        PetscCall(EPSCreate(PETSC_COMM_WORLD, &eps2));
-        PetscCall(EPSSetOperators(eps2, B, NULL));
-        PetscCall(EPSSetProblemType(eps2, EPS_NHEP));
-        PetscCall(EPSSetType(eps2, EPSKRYLOVSCHUR));
-        PetscCall(EPSSetFromOptions(eps2));
-
-
-
-        if (!V_restart || k_restart <=0 ) {
-            PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Error: V_restart is NULL\n"));
-            return -1;
-        }
-
-        PetscCall(EPSSetInitialSpace(eps2, k_restart, V_restart));
+        }iV_restart));
 
 
         /* Second solving*/
@@ -175,7 +156,7 @@
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
         /* Formal end*/
 
-        //PetscReal kr, ki;
+        PetscReal kr, ki;
         for (PetscInt i=0;i<nconv;i++) {
             PetscCall(EPSGetEigenvalue(eps2,i,&kr,&ki));
             PetscCall(PetscPrintf(PETSC_COMM_WORLD, "eigenvalues, Re: %f, Im: %f\n", kr, ki));
@@ -192,12 +173,8 @@
             PetscFree(V_restart);
         }
 
-        PetscCall(EPSDestroy(&eps));
-        //PetscCall(EPSDestroy(&eps2));
-        //PetscCall(MatDestroy(&A));
-        //PetscCall(VecDestroy(&v0));
-        //PetscCall(BVDestroy(&bv));
-        //PetscCall(SlepcFinalize());
+
+        PetscCall(SlepcFinalize());
 
         return 0;
 

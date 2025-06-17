@@ -21,13 +21,17 @@ it = 0;
 
 while max(resid(end,:)) > tol && it<itmax
 
-    [Q,T] = schur(Hsq);                           %schur decomposition
-    [Q_ord, K] = eig_selection(Q,T,k);            %
-    [Vk, Hk] = KS_projection(Q_ord, V, Hsq,  K);        %Krylov_Schur projection 
-    [V,Hsq] = bloccoArnoldi_Av(Vk,f,m,K, Hk);     %
-                                                  %
-    resid = [resid;residuals(Hsq,K,V,f)];         %residuals
+    %schur decomposition
+    [Q,T] = schur(Hsq);                           
+    %eigenvalues selection
+    [Q_ord, K] = eig_selection(Q,T,k);    
+    %Krylov_Schur projection 
+    [Vk, Hk] = KS_projection(Q_ord, V, Hsq,  K);        
+    [V,Hsq] = bloccoArnoldi_Av(Vk,f,m,K, Hk);    
+    %residuals computation                                                   
+    resid = [resid;residuals(Hsq,K,V,f)];         
     it = it+1;
+
 end
 
 ite = 1:size(resid,1);

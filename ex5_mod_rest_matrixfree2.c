@@ -1,8 +1,11 @@
     #include <slepceps.h>
     #include "restart.h"
 
+/* Variant of the standard restart, where EPSSetInitialSpace is not call with the entire restart basis, but whit just the first vector
+   It was discovered that actually the function doesn't store the whole basis*/
+
     int main(int argc, char **argv) {
-        Vec            v0;
+        Vec            v0, v02;
         Mat            A,B;
         EPS            eps, eps2;
         BV             bv;
@@ -66,18 +69,6 @@
 
 
         PetscCall(EPSGetConverged(eps, &nconv));
-
-
-        PetscCall(PetscMalloc1(nconv, &V));
-        for (PetscInt i = 0; i < nconv; ++i) {
-            PetscCall(VecDuplicate(v0, &V[i]));
-            PetscCall(EPSGetEigenvector(eps, i, V[i], NULL));
-        }
-        PetscCall(SaveRestartData(V, nconv));
-
-
-
-
         PetscBool converged = (nconv > 0);
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Converged? %s\n", converged ? "Yes" : "No"));
 
@@ -123,31 +114,25 @@
 
         /* Load Restart Data */
         PetscCall(LoadRestartData(&V_restart, &k_restart, v0));
+  
 
-       if (!V_restart || k_restart <= 0) {
-            PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Error: V_restart is NULL\n"));
-            return -1;
-        }
-        
         /* Creating eps2*/
         PetscCall(EPSCreate(PETSC_COMM_WORLD, &eps2));
         PetscCall(EPSSetOperators(eps2, B, NULL));
-        PetscCall(EPSSetProblemType(eps2, EPS_NHEP));   
+        PetscCall(EPSSetProblemType(eps2, EPS_NHEP));
         PetscCall(EPSSetType(eps2, EPSKRYLOVSCHUR));
         PetscCall(EPSSetFromOptions(eps2));
 
-        /* manually build vectors*/
-        BV bv_init;
-        PetscCall(BVCreate(PETSC_COMM_WORLD, &bv_init));
-        PetscCall(BVSetSizes(bv_init, PETSC_DECIDE, N, k_restart));
-        PetscCall(BVSetFromOptions(bv_init));
 
-        for (PetscInt i = 0; i < k_restart; ++i) {
-            PetscCall(BVInsertVec(bv_init, i, V_restart[i]));
+
+        if (!V_restart || k_restart <=0 ) {
+            PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Error: V_restart is NULL\n"));
+            return -1;
         }
 
-        /* Using BV as starting point */
-        PetscCall(EPSSetBV(eps2, bv_init));
+        PetscCall(VecDuplicate(V_restart[0], &v02));
+        PetscCall(VecCopy(V_restart[0], v02));
+        PetscCall(EPSSetInitialSpace(eps2, 1, &v02));
 
 
         /* Second solving*/
@@ -159,20 +144,14 @@
         converged = (nconv > 0);
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Converged? %s\n", converged ? "Yes" : "No"));
         
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing eigenvectors of eps2:\n"));
-            for (PetscInt i=0;i<nconv;i++) {
-                PetscCall(EPSGetEigenvector(eps2,i,xr,xi));
-                //PetscCall(VecView(xr,PETSC_VIEWER_STDOUT_WORLD));
-            }
 
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
-        /* Formal end*/
 
         PetscReal kr, ki;
         for (PetscInt i=0;i<nconv;i++) {
             PetscCall(EPSGetEigenvalue(eps2,i,&kr,&ki));
             PetscCall(PetscPrintf(PETSC_COMM_WORLD, "eigenvalues, Re: %f, Im: %f\n", kr, ki));
         }
+
 
         if  (V_restart) {
 
@@ -187,7 +166,6 @@
 
 
         PetscCall(SlepcFinalize());
-    
-        return 0;
 
+        return 0;
     }

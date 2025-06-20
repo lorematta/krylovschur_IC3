@@ -2,7 +2,7 @@
     #include "restart.h"
 
 /* Variant of the standard restart, where EPSSetInitialSpace is not call with the entire restart basis, but whit just the first vector
-   It was discovered that actually the function doesn't store the whole basis*/
+   It was discovered that actually the function doesn't store the whole basis; which linear combination of the basis'vector should we use?*/
 
     int main(int argc, char **argv) {
         Vec            v0, v02;
@@ -69,11 +69,8 @@
 
 
         PetscCall(EPSGetConverged(eps, &nconv));
-        PetscBool converged = (nconv > 0);
+        PetscBool converged = (nconv >= nv);
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Converged? %s\n", converged ? "Yes" : "No"));
-
-        PetscCall(VecDuplicate(v0, &xr));
-        PetscCall(VecDuplicate(v0, &xi));
 
 
         /* Retrieve the BV object from eps.
@@ -130,8 +127,18 @@
             return -1;
         }
 
+        /* Restart is given by considering just the first vector, limit of EPSSetInitialSpace. Is it possible to create a linear combination that optimize that single vector?
+           What happen when the krylov subspace is very very wide? is one vector sufficient to carry out a good restart?
+            */
         PetscCall(VecDuplicate(V_restart[0], &v02));
-        PetscCall(VecCopy(V_restart[0], v02));
+
+        for (PetscInt i =0; i<k; i++){
+           // combinazione lineare con tutti coefficienti unitari 
+            VecAXPY(v02, 1, V_restart[i]);  
+
+        }
+        
+        //PetscCall(VecCopy(V_restart[0], v02));
         PetscCall(EPSSetInitialSpace(eps2, 1, &v02));
 
 

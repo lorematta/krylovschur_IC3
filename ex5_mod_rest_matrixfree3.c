@@ -59,7 +59,7 @@
         PetscCall(EPSSetInitialSpace(eps, 1, &v0));
 
         /* Force a single iteration */
-        PetscCall(EPSSetTolerances(eps, 1e-8, 4)); 
+        PetscCall(EPSSetTolerances(eps, 1e-8, 6)); 
         PetscInt nv, cv,mpd;
         PetscCall(EPSGetDimensions(eps, &nv , &cv, &mpd));
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, " nv = %d, cv = %d\n", nv, cv));
@@ -141,18 +141,21 @@
         }
 
 
-        if (converged) {
-            PetscCall(EPSSetInitialSpace(eps2, k_restart, V_restart));
-            PetscCall(EPSSetDeflationSpace(eps2, nconv, V_conv));
-            
-            /* deflation is not very effective but maybe esluding just one direction is not sufficient*/
+        PetscCall(VecDuplicate(V_restart[0], &v02));
+        PetscCall(VecCopy(V_restart[0], v02));
 
-        } else {
-
-            PetscCall(VecDuplicate(V_restart[0], &v02));
-            PetscCall(VecCopy(V_restart[0], v02));
-            PetscCall(EPSSetInitialSpace(eps2, 1, &v02));
+        for (PetscInt i =0; i<k; i++){
+           // combinazione lineare con tutti coefficienti unitari 
+            VecAXPY(v02, 1, V_restart[i]);  
         }
+
+        PetscCall(EPSSetInitialSpace(eps2, 1, &v02));
+
+        if (converged) {
+            /* deflation is not very effective but maybe esluding just one direction is not sufficient*/
+          PetscCall(EPSSetDeflationSpace(eps2, nconv, V_conv));
+            
+        } 
 
         /* Second solving*/
         PetscCall(EPSSolve(eps2));

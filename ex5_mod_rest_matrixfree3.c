@@ -140,11 +140,12 @@
             return -1;
         }
 
-        
-
 
         if (converged) {
+            PetscCall(EPSSetInitialSpace(eps2, k_restart, V_restart));
             PetscCall(EPSSetDeflationSpace(eps2, nconv, V_conv));
+            
+            /* deflation is not very effective but maybe esluding just one direction is not sufficient*/
 
         } else {
 
@@ -187,3 +188,4 @@
 
         return 0;
     }
+    

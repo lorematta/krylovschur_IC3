@@ -44,7 +44,7 @@ PetscErrorCode MatMult_MarkovModel(Mat A, Vec x, Vec y) {
     PetscCall(MatShellGetContext(A, &contex));
     Mat B = *(Mat*)contex;
    
-    PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Converged? Matmult\n"));
+    //PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Converged? Matmult\n"));
 
     PetscCall(VecGetArrayRead(x, &px));
     PetscCall(VecGetArray(y, &py));

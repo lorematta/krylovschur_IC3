@@ -56,7 +56,7 @@
         PetscCall(EPSSetInitialSpace(eps, 1, &v0));
 
         /* Force a single iteration */
-        PetscCall(EPSSetTolerances(eps, 1e-8, 4)); 
+        PetscCall(EPSSetTolerances(eps, 1e-8, 5)); 
         PetscInt nv, cv,mpd;
         PetscCall(EPSGetDimensions(eps, &nv , &cv, &mpd));
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, " nv = %d, cv = %d\n", nv, cv));
@@ -69,8 +69,7 @@
         PetscBool converged = (nconv > 0);
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Converged? %s\n", converged ? "Yes" : "No"));
 
-        PetscCall(VecDuplicate(v0, &xr));
-        PetscCall(VecDuplicate(v0, &xi));
+
 
 
         /* Retrieve the BV object from eps.
@@ -139,11 +138,7 @@
         converged = (nconv > 0);
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Converged? %s\n", converged ? "Yes" : "No"));
         
-        PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Printing eigenvectors of eps2:\n"));
-            for (PetscInt i=0;i<nconv;i++) {
-                PetscCall(EPSGetEigenvector(eps2,i,xr,xi));
-                //PetscCall(VecView(xr,PETSC_VIEWER_STDOUT_WORLD));
-            }
+ 
 
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "\n"));
         /* Formal end*/

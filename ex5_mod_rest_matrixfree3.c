@@ -1,8 +1,7 @@
     #include <slepceps.h>
     #include "restart.h"
 
-/* Variant of the standard restart, in case some eigenvector are found the function EPSSetDeflationSpace() is called. It lets the Krylov subspace made by 
-    converged eigenvector found so far be saved */
+/* Variant of the standard restart: in case some eigenvector are found, the function EPSSetDeflationSpace() is called */
 
     int main(int argc, char **argv) {
         Vec            v0, v02;
@@ -142,19 +141,17 @@
 
 
         PetscCall(VecDuplicate(V_restart[0], &v02));
-        PetscCall(VecCopy(V_restart[0], v02));
+        PetscCall(VecSet(v02, 0.0));
 
         for (PetscInt i =0; i<k; i++){
-           // combinazione lineare con tutti coefficienti unitari 
+            
             VecAXPY(v02, 1, V_restart[i]);  
         }
 
         PetscCall(EPSSetInitialSpace(eps2, 1, &v02));
 
         if (converged) {
-            /* deflation is not very effective but maybe esluding just one direction is not sufficient*/
-          PetscCall(EPSSetDeflationSpace(eps2, nconv, V_conv));
-            
+          PetscCall(EPSSetDeflationSpace(eps2, nconv, V_conv));        
         } 
 
         /* Second solving*/

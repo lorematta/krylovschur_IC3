@@ -3,7 +3,7 @@ function w = eigconv(mu, tau)
 % eigenvalues of the Jacobian
 
 
-tr = @(mu) (log(abs(mu)) + 1i*imag(mu))/tau;
+tr = @(mu) log(mu)/tau;
 w = tr(mu);
 
 end

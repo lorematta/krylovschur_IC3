@@ -140,20 +140,19 @@
         }
 
 
-        PetscCall(VecDuplicate(V_restart[0], &v02));
+        PetscCall(VecDuplicate(V_restart[0], &v02));    
         PetscCall(VecSet(v02, 0.0));
 
-        for (PetscInt i =0; i<k; i++){
+        PetscInt Ideb = 0;
+
+        if (converged) {
+            Ideb = nconv;
+        }
+
+        for (PetscInt i = Ideb; i<k; i++){
             VecAXPY(v02, 1, V_restart[i]);  
         }
 
-        if (converged) {
-            for (PetscInt i = 0; i < nconv; i++) {
-                PetscCall(VecSetValue(v02, i, 0.0, INSERT_VALUES));
-            }
-            PetscCall(VecAssemblyBegin(v02));
-            PetscCall(VecAssemblyEnd(v02));
-        }
 
         PetscCall(EPSSetInitialSpace(eps2, 1, &v02));
 

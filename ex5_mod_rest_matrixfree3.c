@@ -139,7 +139,7 @@
             return -1;
         }
 
-
+        /* Linear combination*/
         PetscCall(VecDuplicate(V_restart[0], &v02));    
         PetscCall(VecSet(v02, 0.0));
 

@@ -148,7 +148,7 @@
             VecAXPY(v02, 1, V_restart[i]);  
         }
 
-
+        /* Deflation*/
         PetscCall(EPSSetInitialSpace(eps2, 1, &v02));
 
         if (converged) {

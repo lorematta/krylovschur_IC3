@@ -64,7 +64,7 @@
         /* SOLVE */
         PetscCall(EPSSolve(eps));
 
-
+        /*Number of already converged ones
         PetscCall(EPSGetConverged(eps, &nconv));
         PetscBool converged = (nconv > 0);
         PetscCall(PetscPrintf(PETSC_COMM_WORLD, "Converged? %s\n", converged ? "Yes" : "No"));

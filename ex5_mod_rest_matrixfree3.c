@@ -143,13 +143,8 @@
         PetscCall(VecDuplicate(V_restart[0], &v02));    
         PetscCall(VecSet(v02, 0.0));
 
-        PetscInt Ideb = 0;
-
-        if (converged) {
-            Ideb = nconv;
-        }
-
-        for (PetscInt i = Ideb; i<k; i++){
+            
+        for (PetscInt i = 0; i<k; i++){
             VecAXPY(v02, 1, V_restart[i]);  
         }
 

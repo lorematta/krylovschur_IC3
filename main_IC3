@@ -1,4 +1,3 @@
-
 clear all
 clc
 
@@ -8,8 +7,8 @@ A = rand(n,n);
 [f,lf] = funA(A);
 v = rand(n,1);
 v = v/norm(v);
-m = 40;
-k = 2; 
+m = 30;
+k = 10; 
 lf = sort(real(lf), "descend");
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -21,17 +20,14 @@ it = 0;
 
 while max(resid(end,:)) > tol && it<itmax
 
-    %schur decomposition
-    [Q,T] = schur(Hsq);                           
-    %eigenvalues selection
-    [Q_ord, K] = eig_selection(Q,T,k);    
-    %Krylov_Schur projection 
-    [Vk, Hk] = KS_projection(Q_ord, V, Hsq,  K);        
-    [V,Hsq] = bloccoArnoldi_Av(Vk,f,m,K, Hk);    
-    %residuals computation                                                   
-    resid = [resid;residuals(Hsq,K,V,f)];         
+    [Q,T] = schur(Hsq);                           %schur decomposition
+    [Q_ord, K] = eig_selection(Q,T,k);            %
+    [Vk, Hk] = KS_projection(Q_ord, V, Hsq,  K);  %Krylov_Schur projection 
+                                                  %
+    [V,Hsq] = bloccoArnoldi_Av(Vk,f,m,K, Hk);     %Arnoldi restart
+                                                  %
+    resid = [resid;residuals(Hsq,K,V,f)];         %residuals
     it = it+1;
-
 end
 
 ite = 1:size(resid,1);
